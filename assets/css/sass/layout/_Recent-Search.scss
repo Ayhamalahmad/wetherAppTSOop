@@ -1,0 +1,93 @@
+@use "../utils/variables" as *;
+.recent-search {
+  background-color: var(--light-gray);
+  .container {
+    gap: 20px;
+    display: flex;
+    align-items: center;
+    padding: 120px 0;
+    // margin-left: 0;
+    @media #{$maxSmall} {
+      flex-direction: column;
+      padding: 120px 15px;
+    }
+    @media #{$minLarge2} {
+      margin-left: 312px;
+    }
+    .recent-left {
+      h1,p{
+        color: var(--dark);
+      }
+      h1 {
+        font-size: 32px;
+        font-weight: 700;
+        line-height: 42px;
+        @media #{$minSmall} {
+          font-size: 57px;
+          line-height: 74px;
+        }
+      }
+      p {
+      }
+    }
+    .recent-gallery {
+      overflow-x: scroll;
+      scroll-behavior: smooth;
+      width: 100%;
+      &::-webkit-scrollbar {
+        display: none;
+      }
+      .wrapper {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        // gap: 35px/;
+        flex: none;
+        width: 100%;
+        .box {
+          position: relative;
+          @media #{$minMedium} {
+            width: calc((100% - 20px) / 2);
+          }
+          @media #{$maxSmall} {
+            width: calc((100% - 20px) / 3);
+          }
+          @media #{$extraSmall} {
+            width: calc(100% - 20px / 2);
+          }
+          img {
+          // width: 100%;
+            border-radius: 45px;
+          }
+          .contant {
+            position: absolute;
+            z-index: 999;
+            top: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            margin: auto;
+            gap: 10px;
+            padding: 30px 0 0 30px;
+            align-items: start;
+            img {
+              max-width: 100%;
+              height: auto;
+            }
+            h2,
+            p {
+              color: $light;
+              text-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22);
+            }
+            p {
+            }
+
+            h2 {
+            }
+          }
+        }
+      }
+    }
+  }
+}

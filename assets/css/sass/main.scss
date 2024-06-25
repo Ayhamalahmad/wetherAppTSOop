@@ -1,0 +1,32 @@
+@use "../sass/pages/globalpage" as *;
+
+@use "../sass/utils/variables" as *;
+@use "../sass/utils/mixins" as *;
+@use "../sass/components/global" as *;
+@use "../sass/components/buttons" as *;
+
+@use "../sass/layout/grid" as *;
+
+@use "../sass/layout/header" as *;
+
+@use "../sass/layout/home" as *;
+
+@use "../sass/layout/weekly" as *;
+
+@use "../sass/layout/Recent-Search" as *;
+
+@use "../sass/layout/Today-Weather-Details" as *;
+
+@use "../sass/layout/Best-Hotel-In-Location" as *;
+
+@use "../sass/layout/Best-Restaurants-In-Location" as *;
+
+@use "../sass/layout/Top-City-Forecast" as *;
+
+@use "../sass/layout/Weather-Forecast-News" as *;
+
+@use "../sass/layout/Subscribe" as *;
+
+@use "../sass/layout/footer" as *;
+
+
