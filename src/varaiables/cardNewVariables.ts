@@ -15,4 +15,4 @@ export const cardNewVariables: cardNewVariablesType = {
 // export default {cardNewVariables};
 // export 
 // console.log("from cardNewVariables file");
-export  let as: string = "from cardNewVariables file";
+export let as: string = "from cardNewVariables file";
