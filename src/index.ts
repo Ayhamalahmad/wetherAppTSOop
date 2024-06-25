@@ -125,18 +125,55 @@ interface weeklyVarsTypes {
     todayWrapper: HTMLElement | null,
 }
 const weeklyVars: weeklyVarsTypes = {
-    groupAllBtn :document.querySelectorAll(".button-group button"),
-    todayBtn :document.querySelector(".today-button"),
-    weeklyBtn :document.querySelector(".weekly-button"),
-    gallary :document.querySelector(".gallary"),
-    gallaryWeekly :document.querySelector(".weekly-gallary"),
-    weatherBox :document.querySelector(".weather-box"),
-    weeklyBox :document.querySelector(".weekly-gallary .weekly-wrapper .box"),
-    nextBtn : document.querySelector(".next-button"),
-    previouBtn : document.querySelector(".previous-button"),
-    navigationBtns : document.querySelectorAll(".navigation-buttons button"),
-    weeklyWrapper : document.querySelector(".weekly-wrapper"),
-    todayWrapper : document.querySelector(".today-wrapper"),
-    
+    groupAllBtn: document.querySelectorAll(".button-group button"),
+    todayBtn: document.querySelector(".today-button"),
+    weeklyBtn: document.querySelector(".weekly-button"),
+    gallary: document.querySelector(".gallary"),
+    gallaryWeekly: document.querySelector(".weekly-gallary"),
+    weatherBox: document.querySelector(".weather-box"),
+    weeklyBox: document.querySelector(".weekly-gallary .weekly-wrapper .box"),
+    nextBtn: document.querySelector(".next-button"),
+    previouBtn: document.querySelector(".previous-button"),
+    navigationBtns: document.querySelectorAll(".navigation-buttons button"),
+    weeklyWrapper: document.querySelector(".weekly-wrapper"),
+    todayWrapper: document.querySelector(".today-wrapper"),
+
 }
 
+// Api Url
+//template =>  https://wecast.vercel.app/
+
+var temperatureUnit = document.createElement("sup");
+temperatureUnit.textContent = "℃";
+// °
+interface locationSettingsTypes {
+    latitude1: number | null,
+    longitude2: number | null,
+    data: any | null;
+    hourlyDataForCurrentDay: string[],
+}
+let locationSettings: locationSettingsTypes = {
+    latitude1: null,
+    longitude2: null,
+    data: null,
+    hourlyDataForCurrentDay: [],
+}
+
+class weatherData {
+    private APIKey: string;
+    private apiUrl: string;
+
+    constructor() {
+        this.APIKey = "473a86fc6ac47386e6d6c5132cc575a8";
+        this.apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=London&units=metric&appid=${this.APIKey}`;
+    }
+    public async fetchWeather() {
+        try {
+            let response = await fetch(this.apiUrl);
+            locationSettings.data = await response.json();
+        } catch (error) {
+            console.error("Error fetching weather data:", error);
+        }
+    }
+
+}
