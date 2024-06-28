@@ -1,3 +1,4 @@
+import { Url } from "url";
 
 // card New Variables
 interface cardNewVariablesTypes {
@@ -42,7 +43,7 @@ interface homeVarsTypes {
     weatherDescription: NodeListOf<HTMLElement> | null,
     tempMin: NodeListOf<HTMLElement> | null,
     tempMax: NodeListOf<HTMLElement> | null,
-    weatherIcon: NodeListOf<HTMLElement> | null,
+    weatherIcon: NodeListOf<HTMLImageElement>,
 }
 const homeVars: homeVarsTypes = {
     // Location info
@@ -152,16 +153,24 @@ interface locationSettingsTypes {
     longitude2: number | null,
     data: any | null;
     hourlyDataForCurrentDay: string[],
+    uniqueForecastDays: string[],
+    iconURL: string,
+    fiveDaysforecast?: any,
+    createWeatherWeekly?: any,
 }
 let locationSettings: locationSettingsTypes = {
     latitude1: null,
     longitude2: null,
     data: null,
     hourlyDataForCurrentDay: [],
+    uniqueForecastDays: [],
+    iconURL: "",
+    fiveDaysforecast: null,
+    createWeatherWeekly: "",
 }
 interface DateUtilsTypes {
     weatherUpdateTime: HTMLElement | null,
-    weatherDate: HTMLElement | null,
+    weatherDateT: HTMLElement | null,
     daysOfWeek: string[] | null,
     daysOfWeekAbbreviations: string[] | null,
     months: string[] | null,
@@ -171,7 +180,7 @@ interface DateUtilsTypes {
 }
 const DateUtils: DateUtilsTypes = {
     weatherUpdateTime: document.querySelector(".weather-update-time"),
-    weatherDate: document.querySelector(".date-info .weather-date"),
+    weatherDateT: document.querySelector(".date-info .weather-date"),
 
     daysOfWeek: [
         "Sunday",
@@ -230,22 +239,21 @@ class dateHndler {
     private hours: number | undefined | any;;
     private minutes: number | undefined | any;;
     private dateUtils: DateUtilsTypes;
-    constructor(dateUtils: DateUtilsTypes) {
+    constructor(dateUtils: DateUtilsTypes, locationSettings: locationSettingsTypes) {
         this.dateUtils = dateUtils;
     }
     public handleData(): void {
-        const { currentDate, daysOfWeek, monthAbbreviations, weatherDate, weatherUpdateTime } = this.dateUtils;
+        const { currentDate, daysOfWeek, monthAbbreviations, weatherDateT, weatherUpdateTime } = this.dateUtils;
         this.hours = currentDate?.getHours();
         this.minutes = currentDate?.getMinutes();
 
         const formattedTime: string = `${this.hours % 12 || 12}:${this.minutes < 10 ? "0" : ""
             }${this.minutes} ${this.hours >= 12 ? "PM" : "AM"}`;
-
-        let nowDate: string =
-            `${daysOfWeek[currentDate.getDay()]},${monthAbbreviations[currentDate.getMonth()]} ${currentDate.getDate()}`;
-
-        weatherDate.textContent = nowDate;
-        weatherUpdateTime.textContent = `Update As Of ${formattedTime}`;
+        if (daysOfWeek && currentDate && monthAbbreviations && currentDate && weatherDateT && weatherUpdateTime) {
+            let nowDate: string = `${daysOfWeek[currentDate.getDay()]},${monthAbbreviations[currentDate.getMonth()]} ${currentDate.getDate()}`;
+            weatherDateT.textContent = nowDate;
+            weatherUpdateTime.textContent = `Update As Of ${formattedTime}`;
+        }
     }
 }
 class weatherData {
@@ -258,29 +266,171 @@ class weatherData {
     }
     public async fetchWeather(): Promise<void> {
         try {
-            let response = await fetch(this.apiUrl);
+            console.log("from : fetchWeather");
+            let response: Response = await fetch(this.apiUrl);
             locationSettings.data = await response.json();
         } catch (error) {
 
         }
     }
 }
+class textHandler {
+    public updateElementText(elements: any, text: any): void {
+        if (Array.isArray(elements)) {
+            elements.forEach((element: any) => {
+                if (element.textContent) element.textContent = text;
+            });
+        }
+    }
+    // 
+    public cityNameHandler() {
+        console.log("from : cityNameHandler");
+        if (locationSettings.data && locationSettings.data.cod === "404") {
+            console.log("from : cityNameHandler");
+            homeVars.filedMeessage?.classList.add("active");
+        } else {
+            if (locationSettings.data.name && homeVars.cityName) {
+                homeVars.cityName.textContent = locationSettings.data.name;
+            }
+            homeVars.filedMeessage?.classList.remove("active");
+        }
+    }
+    // sunrise and sunset
+    public sunriseAndSunset() {
+        console.log("sunriseAndSunset");
+        if (cardNewVariables.timeSunset && cardNewVariables.timeSunrise && homeVars.country && locationSettings.data.main && locationSettings.data.wind && locationSettings.data.weather && locationSettings.data.clouds && locationSettings.data.sys) {
+            homeVars.country.textContent = locationSettings.data.sys.country;
+            const sunsetTime = new Date(locationSettings.data.sys.sunset * 1000);
+            const sunriseTime = new Date(locationSettings.data.sys.sunrise * 1000);
+            cardNewVariables.timeSunrise.textContent = `${sunriseTime.getHours() < 10
+                ? `0${sunriseTime.getHours()}`
+                : sunriseTime.getHours()
+                }:${sunriseTime.getMinutes() < 10
+                    ? `0${sunriseTime.getMinutes()}`
+                    : sunriseTime.getMinutes()
+                } AM`;
+            cardNewVariables.timeSunset.textContent = `${sunsetTime.getHours() < 10
+                ? `0${sunsetTime.getHours()}`
+                : sunsetTime.getHours()
+                }:${sunsetTime.getMinutes() < 10
+                    ? `0${sunsetTime.getMinutes()}`
+                    : sunsetTime.getMinutes()
+                } PM`;
+        }
+    }
+    // card left
+    public cardleft() {
+        const rainData = locationSettings.data.rain;
+        console.log("rainData", rainData);
+        if (rainData && rainData["1h"]) {
+            const rainAmount = rainData["1h"];
+            this.updateElementText(locationSettings.data.rain, `rain ${rainAmount}h`);
+        } else {
+            this.updateElementText(locationSettings.data.rain, `rain ${0}h`);
+        }
+        this.updateElementText(locationSettings.data.humidity, `${locationSettings.data.main.humidity}%`);
+        this.updateElementText(locationSettings.data.clouds, `clouds ${locationSettings.data.clouds.all}%`);
+        this.updateElementText(locationSettings.data.wind, `Wind ${locationSettings.data.wind.speed}km/h`);
+    }
+
+    // card right
+    public cardRight() {
+        locationSettings.iconURL =
+            "http://openweathermap.org/img/wn/" +
+            locationSettings.data.weather[0].icon +
+            "@4x" +
+            ".png";
+        homeVars.weatherIcon?.forEach((e) => {
+            e.src = locationSettings.iconURL;
+        });
+
+        this.updateElementText(homeVars.temperature, Math.trunc(locationSettings.data.main.temp));
+        this.updateElementText(homeVars.weatherDescription, locationSettings.data.weather[0].description);
+        this.updateElementText(homeVars.tempMin, `${Math.trunc(locationSettings.data.main.temp_min)}°`);
+        this.updateElementText(homeVars.tempMax, `- ${Math.trunc(locationSettings.data.main.temp_max)}°`);
+    }
+    // news card
+    public newsCard() {
+        if (cardNewVariables.currentTemperature && cardNewVariables.highTemperature) {
+            console.log("locationSettings.data.main.temp_max", locationSettings.data.main.temp_max);
+            cardNewVariables.currentTemperature.textContent = `${Math.trunc(locationSettings.data.main.temp_min)}°`;
+            cardNewVariables.highTemperature.textContent = `${Math.floor(locationSettings.data.main.temp_max)}°`;
+        }
+    }
+    // five Days forecast
+    public fiveDaysforecastM() {
+        if (locationSettings.data.list) {
+            locationSettings.createWeatherWeekly = (element: any) => {
+                const dateString = element.dt_txt.split(" ")[0];
+                const dateParts = dateString.split("-");
+                const year = parseInt(dateParts[0]);
+                const month = parseInt(dateParts[1]) - 1;
+                const day = parseInt(dateParts[2]);
+                const dateObject = new Date(year, month, day);
+                return `
+            <div class="box">
+              <div class="box-image">
+                <img src="http://openweathermap.org/img/wn/${element.weather[0].icon
+                    }@4x.png" alt="" />
+              </div>
+              <div class="box-content">
+                <p class="date">
+                ${DateUtils.daysOfWeekAbbreviations ? DateUtils.daysOfWeekAbbreviations[dateObject.getDay()] : ""}, ${day} ${DateUtils.monthAbbreviations ? DateUtils.monthAbbreviations[month] : ""}
+            </p>
+                < h2 class="temperature" > ${(
+                        element.main.temp - 273.15
+                    ).toFixed()
+                    }°</h2>
+                < /div>
+                < /div>
+                    `;
+            };
+            locationSettings.uniqueForecastDays = [];
+            locationSettings.fiveDaysforecast = locationSettings.data.list.filter((forecast: any) => {
+                const forecastDate: any = new Date(forecast.dt_txt).getDate();
+                if (!locationSettings.uniqueForecastDays.includes(forecastDate)) {
+                    locationSettings.uniqueForecastDays.push(forecastDate);
+                    return true;
+                }
+                return false;
+            });
+        }
+    }
+    // reset weeklyWrapper
+    public resetWeeklyWrapper() {
+        if (weeklyVars.weeklyWrapper) { weeklyVars.weeklyWrapper.textContent = ""; }
+        locationSettings.fiveDaysforecast.forEach((element: any) => {
+            weeklyVars.weeklyWrapper?.insertAdjacentHTML(
+                "beforeend",
+                locationSettings.createWeatherWeekly(element)
+            );
+
+        });
+    }
 
 
+
+}
+// Instances 
 let weatherInstance = new weatherData();
+let textHandlerInstance = new textHandler();
+
+
 weatherInstance.fetchWeather().then(() => {
     if (locationSettings.data) {
+        console.log(locationSettings.data);
+        // weatherInstance.fetchWeather;
+        textHandlerInstance.cityNameHandler();
+        textHandlerInstance.sunriseAndSunset();
+        textHandlerInstance.newsCard();
+        textHandlerInstance.cardRight();
+        textHandlerInstance.cardleft();
+        textHandlerInstance.fiveDaysforecastM();
 
     } else {
 
     }
 });
-// async function fetchDataAndLog() {
-//     try {
-//         await weatherInstance.fetchWeather();
-//
-//     } catch (error) {
-//
-//     }
-// }
+
+
 
