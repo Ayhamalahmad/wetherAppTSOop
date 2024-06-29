@@ -1,16 +1,14 @@
-import { Url } from "url";
-
 // card New Variables
 interface cardNewVariablesTypes {
     currentTemperature: HTMLElement | null,
-    newsWeatherInfo: HTMLElement | null,
+    NewsWeatherInfo: HTMLElement | null,
     highTemperature: HTMLElement | null,
     timeSunrise: HTMLElement | null,
     timeSunset: HTMLElement | null,
 }
 const cardNewVariables: cardNewVariablesTypes = {
     currentTemperature: document.querySelector(".current-temperature"),
-    newsWeatherInfo: document.querySelector(".today-weather-details .weather-container .weather-info"),
+    NewsWeatherInfo: document.querySelector(".today-weather-details .weather-container .weather-info"),
     highTemperature: document.querySelector(".high-temperature"),
     timeSunrise: document.querySelector(".time-sunrise .time-value"),
     timeSunset: document.querySelector(".time-sunset .time-value")
@@ -152,21 +150,23 @@ interface locationSettingsTypes {
     latitude1: number | null,
     longitude2: number | null,
     data: any | null;
-    hourlyDataForCurrentDay: string[],
+    hourlyDataForCurrentDay: any[],
     uniqueForecastDays: string[],
     iconURL: string,
     fiveDaysforecast?: any,
     createWeatherWeekly?: any,
+    daylyRain?: string,
 }
 let locationSettings: locationSettingsTypes = {
     latitude1: null,
     longitude2: null,
-    data: null,
+    data: "",
     hourlyDataForCurrentDay: [],
     uniqueForecastDays: [],
     iconURL: "",
     fiveDaysforecast: null,
     createWeatherWeekly: "",
+    daylyRain: "",
 }
 interface DateUtilsTypes {
     weatherUpdateTime: HTMLElement | null,
@@ -360,6 +360,7 @@ class textHandler {
     // five Days forecast
     public fiveDaysforecastM() {
         if (locationSettings.data.list) {
+            console.log("locationSettings.data.list", locationSettings.data.list);
             locationSettings.createWeatherWeekly = (element: any) => {
                 const dateString = element.dt_txt.split(" ")[0];
                 const dateParts = dateString.split("-");
@@ -399,7 +400,7 @@ class textHandler {
     // reset weeklyWrapper
     public resetWeeklyWrapper() {
         if (weeklyVars.weeklyWrapper) { weeklyVars.weeklyWrapper.textContent = ""; }
-        locationSettings.fiveDaysforecast.forEach((element: any) => {
+        locationSettings.fiveDaysforecast?.forEach((element: any) => {
             weeklyVars.weeklyWrapper?.insertAdjacentHTML(
                 "beforeend",
                 locationSettings.createWeatherWeekly(element)
@@ -409,7 +410,138 @@ class textHandler {
     }
 
 
+    // hourly
+    // reset  hourlyDataForCurrentDay
+    //  locationSettings.hourlyDataForCurrentDay = [];
+    // xx
+    sdf() {
+        if (locationSettings.data) {
+            locationSettings.data.list?.forEach((e: any) => {
+                const dateTimeParts = e.dt_txt.split(" ");
+                const dateParts = dateTimeParts[0].split("-");
+                const day = parseInt(dateParts[2]);
+                console.log(day);
+                console.log(dateParts);
+                console.log(dateTimeParts);
+                if (day === DateUtils.currentDay) {
+                    locationSettings.hourlyDataForCurrentDay.push(e);
+                }
+            });
+        }
+    }
+    // reset NewsWeatherInfo
+    resetNewsWeatherInfoAndTodayWrapper() {
+        if (cardNewVariables.NewsWeatherInfo && weeklyVars.todayWrapper) {
+            cardNewVariables.NewsWeatherInfo.textContent = "";
+            // reset todayWrapper
+            weeklyVars.todayWrapper.textContent = "";
+        }
 
+    }
+    // xx
+    cc() {
+        locationSettings.hourlyDataForCurrentDay?.forEach((e: any) => {
+            const dateTimeParts = e.dt_txt.split(" ")[1].split(":")[0];
+            const daylyRainData = e.rain;
+            locationSettings.daylyRain;
+            if (daylyRainData && daylyRainData["3h"]) {
+                locationSettings.daylyRain = daylyRainData["3h"];
+            }
+            let period = "AM";
+            const hour = parseInt(dateTimeParts);
+            if (hour >= 12) {
+                period = "PM";
+            }
+            const hour12Format = hour > 12 ? hour - 12 : hour;
+            const temperature = Math.floor(e.main.temp - 273.15);
+            const temperatureMax = Math.floor(e.main.temp_max - 273.15);
+            const main = e.weather[0].main;
+            const description = e.weather[0].description;
+            const speed = e.wind.speed;
+
+            // Funtion to create card
+            const createHourly = () => {
+                return `
+        <div class="weather-box">
+        <img src="http://openweathermap.org/img/wn/${e.weather[0].icon
+                    }@4x.png" alt="" />
+    
+        <div class="weather-info">
+          <span class="weather-text">${main}</span>
+          <span class="weather-time">${hour12Format < 10 ? `0${hour12Format}` : hour12Format
+                    } ${period}</span>
+        </div>
+    
+        <div class="temperature">
+          <h2 class="temperature-high">${temperature}°</h2>
+          <h4 class="temperature-low">${temperatureMax}°</h4>
+        </div>
+    
+        <div class="wind-rain">
+          <div class="wind-speed">
+            <i class="fas fa-wind icon"></i>
+            <span class="wind-speed-text">${speed}km/H</span>
+          </div>
+    
+          <div class="rain">
+            <i class="fas fa-cloud-showers-heavy icon"></i>
+            <span class="rain-text">rain ${locationSettings.daylyRain ? locationSettings.daylyRain : 0} h</span>
+          </div>
+        </div>
+    
+        <div class="weather-description">
+          <p>${description}</p>
+        </div>
+      </div>
+        `;
+            };
+            // Insert Data
+            weeklyVars.todayWrapper?.insertAdjacentHTML("beforeend", createHourly());
+            // hourly for news
+            // Funtion to create card
+            const createHourlyNews = () => {
+                return `
+              <div class="weather-details">
+              <i class="fas fa-cloud weather-icon"></i>
+              <span class="temperature">
+              ${temperature}
+                <sup>°</sup>
+              </span>
+              <span class="time">${hour12Format < 10 ? `0${hour12Format}` : hour12Format
+                    } ${period}</span>
+              <span class="condition">${description}</span>
+            </div>
+        `;
+            };
+            // Insert Data
+            cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", createHourlyNews());
+        });
+    }
+
+    // 
+            // Insert Data
+            todayWrapper.insertAdjacentHTML("beforeend", createHourly());
+            // hourly for news
+            // Funtion to create card
+            const createHourlyNews = () => {
+              return `
+              <div class="weather-details">
+              <i class="fas fa-cloud weather-icon"></i>
+              <span class="temperature">
+              ${temperature}
+                <sup>°</sup>
+              </span>
+              <span class="time">${
+                hour12Format < 10 ? `0${hour12Format}` : hour12Format
+              } ${period}</span>
+              <span class="condition">${description}</span>
+            </div>
+        `;
+            };
+            // Insert Data
+            NewsWeatherInfo.insertAdjacentHTML("beforeend", createHourlyNews());
+          });
+    // 
 }
 // Instances 
 let weatherInstance = new weatherData();
@@ -426,6 +558,9 @@ weatherInstance.fetchWeather().then(() => {
         textHandlerInstance.cardRight();
         textHandlerInstance.cardleft();
         textHandlerInstance.fiveDaysforecastM();
+        textHandlerInstance.sdf();
+        textHandlerInstance.resetWeeklyWrapper();
+        textHandlerInstance.cc();
 
     } else {
 
