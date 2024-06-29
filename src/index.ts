@@ -1,4 +1,3 @@
-// card New Variables
 interface cardNewVariablesTypes {
     currentTemperature: HTMLElement | null,
     NewsWeatherInfo: HTMLElement | null,
@@ -13,7 +12,6 @@ const cardNewVariables: cardNewVariablesTypes = {
     timeSunrise: document.querySelector(".time-sunrise .time-value"),
     timeSunset: document.querySelector(".time-sunset .time-value")
 }
-
 interface headerVarsTypes {
     menuBtn: HTMLElement | null;
     headerContainer: HTMLElement | null;
@@ -29,7 +27,7 @@ const headerVars: headerVarsTypes = {
 interface homeVarsTypes {
     country: HTMLElement | null,
     cityName: HTMLElement | null,
-    locationInput: HTMLElement | null,
+    locationInput: HTMLInputElement | null,
     searchBTN: HTMLElement | null,
     filedMeessage: HTMLElement | null,
     locationBtn: HTMLElement | null,
@@ -156,6 +154,20 @@ interface locationSettingsTypes {
     fiveDaysforecast?: any,
     createWeatherWeekly?: any,
     daylyRain?: string,
+    APIKey: string;
+    apiUrl: string;
+    successCallback: Function,
+    positionErrorCallback: Function,
+    hour12Format: any,
+    temperature: any,
+    temperatureMax: any,
+    main: any,
+    description: any,
+    speed: any,
+    period: any,
+    dateTimeParts: any,
+    daylyRainData: any,
+    hour: any,
 }
 let locationSettings: locationSettingsTypes = {
     latitude1: null,
@@ -167,6 +179,21 @@ let locationSettings: locationSettingsTypes = {
     fiveDaysforecast: null,
     createWeatherWeekly: "",
     daylyRain: "",
+    APIKey: "",
+    apiUrl: "",
+    successCallback: () => { },
+    positionErrorCallback: () => { },
+    hour12Format: "",
+    temperature: "",
+    temperatureMax: "",
+    main: "",
+    description: "",
+    speed: "",
+    period: "",
+    dateTimeParts: "",
+    daylyRainData: "",
+    hour: "",
+
 }
 interface DateUtilsTypes {
     weatherUpdateTime: HTMLElement | null,
@@ -235,6 +262,7 @@ const DateUtils: DateUtilsTypes = {
     // for hourly
     currentDay: new Date().getDate(),
 }
+
 class dateHndler {
     private hours: number | undefined | any;;
     private minutes: number | undefined | any;;
@@ -257,12 +285,12 @@ class dateHndler {
     }
 }
 class weatherData {
-    private APIKey: string;
-    private apiUrl: string;
+    // private APIKey: string;
+    // private apiUrl: string;
 
     constructor() {
-        this.APIKey = "473a86fc6ac47386e6d6c5132cc575a8";
-        this.apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=London&units=metric&appid=${this.APIKey}`;
+        locationSettings.APIKey = "473a86fc6ac47386e6d6c5132cc575a8";
+        locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=London&units=metric&appid=${locationSettings.APIKey}`;
     }
     public async fetchWeather(): Promise<void> {
         try {
@@ -272,6 +300,27 @@ class weatherData {
         } catch (error) {
 
         }
+    }
+    public async searchCity(city: string) {
+        locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${locationSettings.APIKey}`;
+        await this.fetchWeather();
+        // Reset latitude1 and longitude2
+        locationSettings.latitude1 = 0;
+        locationSettings.longitude2 = 0;
+    }
+    public async getWeatherWeekly(city?: any) {
+        if ((locationSettings.latitude1, locationSettings.longitude2)) {
+            locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${locationSettings.latitude1}&lon=${locationSettings.longitude2}&appid=${locationSettings.APIKey}`;
+        } else {
+            if (city) {
+                locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${locationSettings.APIKey}`;
+            } else {
+                locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=London&appid=${locationSettings.APIKey}`;
+            }
+        }
+        console.log("getWeatherWeekly", locationSettings.apiUrl);
+        // weatherData.prototype.fetchWeather();
+        await this.fetchWeather();
     }
 }
 class textHandler {
@@ -397,17 +446,7 @@ class textHandler {
             });
         }
     }
-    // reset weeklyWrapper
-    public resetWeeklyWrapper() {
-        if (weeklyVars.weeklyWrapper) { weeklyVars.weeklyWrapper.textContent = ""; }
-        locationSettings.fiveDaysforecast?.forEach((element: any) => {
-            weeklyVars.weeklyWrapper?.insertAdjacentHTML(
-                "beforeend",
-                locationSettings.createWeatherWeekly(element)
-            );
 
-        });
-    }
 
 
     // hourly
@@ -429,6 +468,9 @@ class textHandler {
             });
         }
     }
+
+}
+class reset {
     // reset NewsWeatherInfo
     resetNewsWeatherInfoAndTodayWrapper() {
         if (cardNewVariables.NewsWeatherInfo && weeklyVars.todayWrapper) {
@@ -438,48 +480,63 @@ class textHandler {
         }
 
     }
-    // xx
-    cc() {
+
+    // reset weeklyWrapper
+    public resetWeeklyWrapper() {
+        if (weeklyVars.weeklyWrapper) { weeklyVars.weeklyWrapper.textContent = ""; }
+        locationSettings.fiveDaysforecast?.forEach((element: any) => {
+            weeklyVars.weeklyWrapper?.insertAdjacentHTML(
+                "beforeend",
+                locationSettings.createWeatherWeekly(element)
+            );
+
+        });
+    }
+}
+class UIUpdater {
+    updateHourlyWeatherData() {
         locationSettings.hourlyDataForCurrentDay?.forEach((e: any) => {
-            const dateTimeParts = e.dt_txt.split(" ")[1].split(":")[0];
-            const daylyRainData = e.rain;
+            locationSettings.dateTimeParts = e.dt_txt.split(" ")[1].split(":")[0];
+            locationSettings.daylyRainData = e.rain;
             locationSettings.daylyRain;
-            if (daylyRainData && daylyRainData["3h"]) {
-                locationSettings.daylyRain = daylyRainData["3h"];
+            if (locationSettings.daylyRainData && locationSettings.daylyRainData["3h"]) {
+                locationSettings.daylyRain = locationSettings.daylyRainData["3h"];
             }
-            let period = "AM";
-            const hour = parseInt(dateTimeParts);
-            if (hour >= 12) {
-                period = "PM";
+            locationSettings.period = "AM";
+            locationSettings.hour = parseInt(locationSettings.dateTimeParts);
+            if (locationSettings.hour >= 12) {
+                locationSettings.period = "PM";
             }
-            const hour12Format = hour > 12 ? hour - 12 : hour;
-            const temperature = Math.floor(e.main.temp - 273.15);
-            const temperatureMax = Math.floor(e.main.temp_max - 273.15);
-            const main = e.weather[0].main;
-            const description = e.weather[0].description;
-            const speed = e.wind.speed;
-            // Funtion to create card
-            const createHourly = () => {
-                return `
+            locationSettings.hour12Format = locationSettings.hour > 12 ? locationSettings.hour - 12 : locationSettings.hour;
+            locationSettings.temperature = Math.floor(e.main.temp - 273.15);
+            locationSettings.temperatureMax = Math.floor(e.main.temp_max - 273.15);
+            locationSettings.main = e.weather[0].main;
+            locationSettings.description = e.weather[0].description;
+            locationSettings.speed = e.wind.speed;
+        });
+    }
+    // Funtion to create card
+    createHourly() {
+        return `
         <div class="weather-box">
         <img src="http://openweathermap.org/img/wn/${e.weather[0].icon
-                    }@4x.png" alt="" />
+            }@4x.png" alt="" />
     
         <div class="weather-info">
-          <span class="weather-text">${main}</span>
-          <span class="weather-time">${hour12Format < 10 ? `0${hour12Format}` : hour12Format
-                    } ${period}</span>
+          <span class="weather-text">${locationSettings.main}</span>
+          <span class="weather-time">${locationSettings.hour12Format < 10 ? `0${locationSettings.hour12Format}` : locationSettings.hour12Format
+            } ${locationSettings.period}</span>
         </div>
     
         <div class="temperature">
-          <h2 class="temperature-high">${temperature}°</h2>
-          <h4 class="temperature-low">${temperatureMax}°</h4>
+          <h2 class="temperature-high">${locationSettings.temperature}°</h2>
+          <h4 class="temperature-low">${locationSettings.temperatureMax}°</h4>
         </div>
     
         <div class="wind-rain">
           <div class="wind-speed">
             <i class="fas fa-wind icon"></i>
-            <span class="wind-speed-text">${speed}km/H</span>
+            <span class="wind-speed-text">${locationSettings.speed}km/H</span>
           </div>
     
           <div class="rain">
@@ -489,62 +546,87 @@ class textHandler {
         </div>
     
         <div class="weather-description">
-          <p>${description}</p>
+          <p>${locationSettings.description}</p>
         </div>
       </div>
         `;
-            };
+    };
 
-            // Insert Data
-            weeklyVars.todayWrapper?.insertAdjacentHTML("beforeend", createHourly());
-            // hourly for news
-            // Funtion to create card
-            const createHourlyNews = () => {
-                return `
+    // hourly for news
+    // Funtion to create card
+    createHourlyNews() {
+        return `
               <div class="weather-details">
               <i class="fas fa-cloud weather-icon"></i>
               <span class="temperature">
-              ${temperature}
+              ${locationSettings.temperature}
                 <sup>°</sup>
               </span>
-              <span class="time">${hour12Format < 10 ? `0${hour12Format}` : hour12Format
-                    } ${period}</span>
-              <span class="condition">${description}</span>
+              <span class="time">${locationSettings.hour12Format < 10 ? `0${locationSettings.hour12Format}` : locationSettings.hour12Format
+            } ${locationSettings.period}</span>
+              <span class="condition">${locationSettings.description}</span>
             </div>
         `;
-            };
-            // Insert Data
-            cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", createHourlyNews());
+    };
+    // Insert Data
+    //  weeklyVars.todayWrapper?.insertAdjacentHTML("beforeend", createHourly());
 
-        });
-    }
-// Insert Data
-weeklyVars.todayWrapper?.insertAdjacentHTML("beforeend", createHourly());
-// hourly for news
-// Funtion to create card
-const createHourlyNews = () => {
-    return `
-              <div class="weather-details">
-              <i class="fas fa-cloud weather-icon"></i>
-              <span class="temperature">
-              ${temperature}
-                <sup>°</sup>
-              </span>
-              <span class="time">${hour12Format < 10 ? `0${hour12Format}` : hour12Format
-        } ${period}</span>
-              <span class="condition">${description}</span>
-            </div>
-        `;
-};
-// Insert Data
-cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", createHourlyNews());
-        //   });
     // 
+}
+
+class userLocation {
+    private weatherData: weatherData;
+    constructor() {
+        this.weatherData = new weatherData();
+    }
+    public getUserLocation(successCallback: Function, positionErrorCallback: Function): any {
+        locationSettings.successCallback = successCallback;
+        locationSettings.positionErrorCallback = positionErrorCallback;
+        navigator.geolocation.getCurrentPosition(
+            (position) => this.successCallback(position),
+            (error) => this.positionErrorCallback(error)
+        );
+    }
+
+    public async successCallback(position: any) {
+        const { latitude, longitude } = position.coords;
+        locationSettings.latitude1 = latitude;
+        locationSettings.longitude2 = longitude;
+        locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${locationSettings.APIKey}`;
+        await this.weatherData.fetchWeather();
+        await this.weatherData.getWeatherWeekly();
+    }
+    public positionErrorCallback(error: any) {
+        console.log(error);
+    }
 }
 // Instances 
 let weatherInstance = new weatherData();
 let textHandlerInstance = new textHandler();
+let userLocationInstance = new userLocation();
+let uIUpdaterInstance = new UIUpdater();
+// Event listeners
+homeVars.locationBtn?.addEventListener("click", (e) => {
+    userLocationInstance.getUserLocation(locationSettings.successCallback, locationSettings.positionErrorCallback);
+});
 
+homeVars.searchBTN?.addEventListener("click", () => {
+    if (homeVars.locationInput?.value.trim() !== "" && homeVars.locationInput) {
+        weatherInstance.searchCity(homeVars.locationInput.value.trim());
+        weatherInstance.getWeatherWeekly(homeVars.locationInput.value.trim());
+        homeVars.locationInput.value = "";
+    }
+});
+
+homeVars.locationInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+        if (homeVars.locationInput?.value.trim() !== "" && homeVars.locationInput) {
+            weatherInstance.searchCity(homeVars.locationInput.value.trim());
+            weatherInstance.getWeatherWeekly(homeVars.locationInput.value.trim());
+            homeVars.locationInput.value = "";
+        }
+    }
+});
 
 weatherInstance.fetchWeather().then(() => {
     if (locationSettings.data) {
@@ -558,12 +640,17 @@ weatherInstance.fetchWeather().then(() => {
         textHandlerInstance.fiveDaysforecastM();
         textHandlerInstance.sdf();
         textHandlerInstance.resetWeeklyWrapper();
-        textHandlerInstance.cc();
 
     } else {
 
     }
 });
 
+// Insert Data
+cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", createHourlyNews());
+// Insert Data
+cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", createHourlyNews());
 
-
+window.addEventListener("load", () => {
+    userLocationInstance.getUserLocation(locationSettings.successCallback, locationSettings.positionErrorCallback);
+});
