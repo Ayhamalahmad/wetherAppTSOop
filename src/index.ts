@@ -458,7 +458,6 @@ class textHandler {
             const main = e.weather[0].main;
             const description = e.weather[0].description;
             const speed = e.wind.speed;
-
             // Funtion to create card
             const createHourly = () => {
                 return `
@@ -495,6 +494,7 @@ class textHandler {
       </div>
         `;
             };
+
             // Insert Data
             weeklyVars.todayWrapper?.insertAdjacentHTML("beforeend", createHourly());
             // hourly for news
@@ -515,32 +515,30 @@ class textHandler {
             };
             // Insert Data
             cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", createHourlyNews());
+
         });
     }
-
-    // 
-            // Insert Data
-            todayWrapper.insertAdjacentHTML("beforeend", createHourly());
-            // hourly for news
-            // Funtion to create card
-            const createHourlyNews = () => {
-              return `
+// Insert Data
+weeklyVars.todayWrapper?.insertAdjacentHTML("beforeend", createHourly());
+// hourly for news
+// Funtion to create card
+const createHourlyNews = () => {
+    return `
               <div class="weather-details">
               <i class="fas fa-cloud weather-icon"></i>
               <span class="temperature">
               ${temperature}
                 <sup>°</sup>
               </span>
-              <span class="time">${
-                hour12Format < 10 ? `0${hour12Format}` : hour12Format
-              } ${period}</span>
+              <span class="time">${hour12Format < 10 ? `0${hour12Format}` : hour12Format
+        } ${period}</span>
               <span class="condition">${description}</span>
             </div>
         `;
-            };
-            // Insert Data
-            NewsWeatherInfo.insertAdjacentHTML("beforeend", createHourlyNews());
-          });
+};
+// Insert Data
+cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", createHourlyNews());
+        //   });
     // 
 }
 // Instances 
