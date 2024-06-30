@@ -141,8 +141,8 @@ const weeklyVars: weeklyVarsTypes = {
 // Api Url
 //template =>  https://wecast.vercel.app/
 
-var temperatureUnit = document.createElement("sup");
-temperatureUnit.textContent = "℃";
+
+
 // °
 interface locationSettingsTypes {
     latitude1: number | null,
@@ -168,6 +168,7 @@ interface locationSettingsTypes {
     dateTimeParts: any,
     daylyRainData: any,
     hour: any,
+    temperatureUnit: HTMLElement,
 }
 let locationSettings: locationSettingsTypes = {
     latitude1: null,
@@ -193,7 +194,7 @@ let locationSettings: locationSettingsTypes = {
     dateTimeParts: "",
     daylyRainData: "",
     hour: "",
-
+    temperatureUnit: document.createElement("sup"),
 }
 interface DateUtilsTypes {
     weatherUpdateTime: HTMLElement | null,
@@ -262,19 +263,18 @@ const DateUtils: DateUtilsTypes = {
     // for hourly
     currentDay: new Date().getDate(),
 }
-
+// classes
 class dateHndler {
     private hours: number | undefined | any;;
     private minutes: number | undefined | any;;
     private dateUtils: DateUtilsTypes;
-    constructor(dateUtils: DateUtilsTypes, locationSettings: locationSettingsTypes) {
+    constructor(dateUtils: DateUtilsTypes) {
         this.dateUtils = dateUtils;
     }
     public handleData(): void {
         const { currentDate, daysOfWeek, monthAbbreviations, weatherDateT, weatherUpdateTime } = this.dateUtils;
         this.hours = currentDate?.getHours();
         this.minutes = currentDate?.getMinutes();
-
         const formattedTime: string = `${this.hours % 12 || 12}:${this.minutes < 10 ? "0" : ""
             }${this.minutes} ${this.hours >= 12 ? "PM" : "AM"}`;
         if (daysOfWeek && currentDate && monthAbbreviations && currentDate && weatherDateT && weatherUpdateTime) {
@@ -285,18 +285,37 @@ class dateHndler {
     }
 }
 class weatherData {
-    // private APIKey: string;
-    // private apiUrl: string;
-
+    private reset: reset;
+    private UIUpdater: UIUpdater;
+    private dateHndler: dateHndler;
+    private textHandler: textHandler;
     constructor() {
         locationSettings.APIKey = "473a86fc6ac47386e6d6c5132cc575a8";
         locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=London&units=metric&appid=${locationSettings.APIKey}`;
+        this.reset = new reset();
+        this.UIUpdater = new UIUpdater();
+        this.dateHndler = new dateHndler(DateUtils);
+        this.textHandler = new textHandler();
     }
     public async fetchWeather(): Promise<void> {
         try {
             console.log("from : fetchWeather");
-            let response: Response = await fetch(this.apiUrl);
+            let response: Response = await fetch(locationSettings.apiUrl);
             locationSettings.data = await response.json();
+            this.reset.resetNewsWeatherInfoAndTodayWrapper();
+            this.reset.resetWeeklyWrapper();
+            this.UIUpdater.createHourlyNews();
+            // this.UIUpdater.createHourlyNews();
+            this.dateHndler.handleData();
+            this.textHandler.cityNameHandler();
+            this.textHandler.cardleft();
+            this.textHandler.newsCard();
+            this.textHandler.cardRight();
+            this.textHandler.hourly();
+            this.textHandler.fiveDaysforecastM();
+            this.textHandler.sunriseAndSunset();
+            this.UIUpdater.updateHourlyWeatherData();
+            // this.getWeatherWeekly();
         } catch (error) {
 
         }
@@ -304,9 +323,11 @@ class weatherData {
     public async searchCity(city: string) {
         locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${locationSettings.APIKey}`;
         await this.fetchWeather();
+        console.log("from searchCity");
         // Reset latitude1 and longitude2
-        locationSettings.latitude1 = 0;
-        locationSettings.longitude2 = 0;
+        // locationSettings.latitude1 = 0;
+        // locationSettings.longitude2 = 0;
+        this.reset.resetCoordinates();
     }
     public async getWeatherWeekly(city?: any) {
         if ((locationSettings.latitude1, locationSettings.longitude2)) {
@@ -319,7 +340,6 @@ class weatherData {
             }
         }
         console.log("getWeatherWeekly", locationSettings.apiUrl);
-        // weatherData.prototype.fetchWeather();
         await this.fetchWeather();
     }
 }
@@ -333,7 +353,6 @@ class textHandler {
     }
     // 
     public cityNameHandler() {
-        console.log("from : cityNameHandler");
         if (locationSettings.data && locationSettings.data.cod === "404") {
             console.log("from : cityNameHandler");
             homeVars.filedMeessage?.classList.add("active");
@@ -377,39 +396,41 @@ class textHandler {
         } else {
             this.updateElementText(locationSettings.data.rain, `rain ${0}h`);
         }
-        this.updateElementText(locationSettings.data.humidity, `${locationSettings.data.main.humidity}%`);
-        this.updateElementText(locationSettings.data.clouds, `clouds ${locationSettings.data.clouds.all}%`);
-        this.updateElementText(locationSettings.data.wind, `Wind ${locationSettings.data.wind.speed}km/h`);
+        this.updateElementText(locationSettings.data.humidity, `${locationSettings.data.main?.humidity}%`);
+        this.updateElementText(locationSettings.data.clouds, `clouds ${locationSettings.data?.clouds?.all}%`);
+        this.updateElementText(locationSettings.data.wind, `Wind ${locationSettings.data?.wind?.speed}km/h`);
     }
 
     // card right
     public cardRight() {
-        locationSettings.iconURL =
-            "http://openweathermap.org/img/wn/" +
-            locationSettings.data.weather[0].icon +
-            "@4x" +
-            ".png";
+        if (locationSettings.data && locationSettings.data.weather && locationSettings.data.weather.length > 0) {
+            locationSettings.iconURL =
+                "http://openweathermap.org/img/wn/" +
+                locationSettings.data.weather[0]?.icon +
+                "@4x" +
+                ".png";
+        }
+
         homeVars.weatherIcon?.forEach((e) => {
             e.src = locationSettings.iconURL;
         });
 
-        this.updateElementText(homeVars.temperature, Math.trunc(locationSettings.data.main.temp));
-        this.updateElementText(homeVars.weatherDescription, locationSettings.data.weather[0].description);
-        this.updateElementText(homeVars.tempMin, `${Math.trunc(locationSettings.data.main.temp_min)}°`);
-        this.updateElementText(homeVars.tempMax, `- ${Math.trunc(locationSettings.data.main.temp_max)}°`);
+        this.updateElementText(homeVars.temperature, Math.trunc(locationSettings.data.main?.temp));
+        this.updateElementText(homeVars.weatherDescription, locationSettings.data?.weather?.[0]?.description);
+        this.updateElementText(homeVars.tempMin, `${Math.trunc(locationSettings.data.main?.temp_min)}°`);
+        this.updateElementText(homeVars.tempMax, `- ${Math.trunc(locationSettings.data.main?.temp_max)}°`);
     }
     // news card
     public newsCard() {
         if (cardNewVariables.currentTemperature && cardNewVariables.highTemperature) {
-            console.log("locationSettings.data.main.temp_max", locationSettings.data.main.temp_max);
-            cardNewVariables.currentTemperature.textContent = `${Math.trunc(locationSettings.data.main.temp_min)}°`;
-            cardNewVariables.highTemperature.textContent = `${Math.floor(locationSettings.data.main.temp_max)}°`;
+            cardNewVariables.currentTemperature.textContent = `${Math.trunc(locationSettings.data?.main?.temp_min)}°`;
+            cardNewVariables.highTemperature.textContent = `${Math.floor(locationSettings.data?.main?.temp_max)}°`;
         }
     }
     // five Days forecast
     public fiveDaysforecastM() {
         if (locationSettings.data.list) {
-            console.log("locationSettings.data.list", locationSettings.data.list);
+            console.log("from ,fiveDaysforecastM");
             locationSettings.createWeatherWeekly = (element: any) => {
                 const dateString = element.dt_txt.split(" ")[0];
                 const dateParts = dateString.split("-");
@@ -446,14 +467,8 @@ class textHandler {
             });
         }
     }
-
-
-
     // hourly
-    // reset  hourlyDataForCurrentDay
-    //  locationSettings.hourlyDataForCurrentDay = [];
-    // xx
-    sdf() {
+    public hourly() {
         if (locationSettings.data) {
             locationSettings.data.list?.forEach((e: any) => {
                 const dateTimeParts = e.dt_txt.split(" ");
@@ -492,6 +507,11 @@ class reset {
 
         });
     }
+
+    public resetCoordinates(): void {
+        locationSettings.latitude1 = 0;
+        locationSettings.longitude2 = 0;
+    }
 }
 class UIUpdater {
     updateHourlyWeatherData() {
@@ -513,10 +533,14 @@ class UIUpdater {
             locationSettings.main = e.weather[0].main;
             locationSettings.description = e.weather[0].description;
             locationSettings.speed = e.wind.speed;
+            this.createHourly(e);
+            weeklyVars.todayWrapper?.insertAdjacentHTML("beforeend", this.createHourly(e));
+            this.createHourlyNews();
+            cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", uIUpdaterInstance.createHourlyNews());
         });
     }
     // Funtion to create card
-    createHourly() {
+    createHourly(e: any) {
         return `
         <div class="weather-box">
         <img src="http://openweathermap.org/img/wn/${e.weather[0].icon
@@ -555,6 +579,7 @@ class UIUpdater {
     // hourly for news
     // Funtion to create card
     createHourlyNews() {
+        console.log("from createHourlyNews");
         return `
               <div class="weather-details">
               <i class="fas fa-cloud weather-icon"></i>
@@ -568,12 +593,7 @@ class UIUpdater {
             </div>
         `;
     };
-    // Insert Data
-    //  weeklyVars.todayWrapper?.insertAdjacentHTML("beforeend", createHourly());
-
-    // 
 }
-
 class userLocation {
     private weatherData: weatherData;
     constructor() {
@@ -600,57 +620,79 @@ class userLocation {
         console.log(error);
     }
 }
+locationSettings.temperatureUnit.textContent = "℃";
 // Instances 
 let weatherInstance = new weatherData();
 let textHandlerInstance = new textHandler();
 let userLocationInstance = new userLocation();
 let uIUpdaterInstance = new UIUpdater();
+let resetInstance = new reset();
+let dateHndlerInstance = new dateHndler(DateUtils);
 // Event listeners
 homeVars.locationBtn?.addEventListener("click", (e) => {
     userLocationInstance.getUserLocation(locationSettings.successCallback, locationSettings.positionErrorCallback);
 });
-
 homeVars.searchBTN?.addEventListener("click", () => {
     if (homeVars.locationInput?.value.trim() !== "" && homeVars.locationInput) {
+        // weatherInstance
         weatherInstance.searchCity(homeVars.locationInput.value.trim());
         weatherInstance.getWeatherWeekly(homeVars.locationInput.value.trim());
+        // uIUpdaterInstance.updateHourlyWeatherData();
+        resetInstance.resetWeeklyWrapper();
         homeVars.locationInput.value = "";
     }
 });
-
 homeVars.locationInput?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
         if (homeVars.locationInput?.value.trim() !== "" && homeVars.locationInput) {
             weatherInstance.searchCity(homeVars.locationInput.value.trim());
             weatherInstance.getWeatherWeekly(homeVars.locationInput.value.trim());
             homeVars.locationInput.value = "";
+            resetInstance.resetWeeklyWrapper();
         }
     }
 });
-
 weatherInstance.fetchWeather().then(() => {
     if (locationSettings.data) {
         console.log(locationSettings.data);
-        // weatherInstance.fetchWeather;
-        textHandlerInstance.cityNameHandler();
-        textHandlerInstance.sunriseAndSunset();
-        textHandlerInstance.newsCard();
-        textHandlerInstance.cardRight();
-        textHandlerInstance.cardleft();
-        textHandlerInstance.fiveDaysforecastM();
-        textHandlerInstance.sdf();
-        textHandlerInstance.resetWeeklyWrapper();
-
-    } else {
-
+        // resetInstance
+        resetInstance.resetWeeklyWrapper();
+        // Insert Data
+        cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", uIUpdaterInstance.createHourlyNews());
+        // Insert Data
+        cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", uIUpdaterInstance.createHourlyNews());
     }
 });
 
-// Insert Data
-cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", createHourlyNews());
-// Insert Data
-cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", createHourlyNews());
 
-window.addEventListener("load", () => {
+
+window.addEventListener("load", async () => {
     userLocationInstance.getUserLocation(locationSettings.successCallback, locationSettings.positionErrorCallback);
+    await weatherInstance.fetchWeather();
+    await weatherInstance.getWeatherWeekly();
+    resetInstance.resetWeeklyWrapper();
+    // Insert Data
+    // cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", uIUpdaterInstance.createHourlyNews());
 });
+class HorizontalScroll {
+    scrollNext(neBtn: HTMLElement, Gallery: HTMLElement, ElementTo: HTMLElement, gap: number = 0) {
+        neBtn.addEventListener("click", (e) => {
+            if (typeof ElementTo === "number") {
+                Gallery.scrollLeft += ElementTo + gap;
+            } else {
+                Gallery.scrollLeft += ElementTo.offsetWidth + gap;
+            }
+            console.log("from new fun");
+        });
+    }
+    scrollpreviou(peBtn: HTMLElement, Gallery: HTMLElement, ElementTo: HTMLElement, gap: number = 0) {
+        peBtn.addEventListener("click", (e) => {
+            if (typeof ElementTo === "number") {
+                Gallery.scrollLeft -= ElementTo + gap;
+            } else {
+                Gallery.scrollLeft -= ElementTo.offsetWidth + gap;
+            }
+            console.log("from new scrollpreviou");
+        });
+    }
+}
