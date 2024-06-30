@@ -675,7 +675,12 @@ window.addEventListener("load", async () => {
     // cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", uIUpdaterInstance.createHourlyNews());
 });
 class HorizontalScroll {
-    scrollNext(neBtn: HTMLElement, Gallery: HTMLElement, ElementTo: HTMLElement, gap: number = 0) {
+    static scrollInterval: ReturnType<typeof setInterval>;
+    static isScrollingForward: Boolean = true;
+    static scrollDelay: number = 6000;
+    static isTargetReached: boolean = false;
+    static isTargetReached2: boolean = false;
+    public static scrollNext(neBtn: HTMLElement | null, Gallery: HTMLElement | null, ElementTo: HTMLElement | null | number, gap: number = 0) {
         neBtn.addEventListener("click", (e) => {
             if (typeof ElementTo === "number") {
                 Gallery.scrollLeft += ElementTo + gap;
@@ -685,7 +690,7 @@ class HorizontalScroll {
             console.log("from new fun");
         });
     }
-    scrollpreviou(peBtn: HTMLElement, Gallery: HTMLElement, ElementTo: HTMLElement, gap: number = 0) {
+    public static scrollpreviou(peBtn: HTMLElement | null, Gallery: HTMLElement | null, ElementTo: HTMLElement | null | number, gap: number = 0) {
         peBtn.addEventListener("click", (e) => {
             if (typeof ElementTo === "number") {
                 Gallery.scrollLeft -= ElementTo + gap;
@@ -695,4 +700,53 @@ class HorizontalScroll {
             console.log("from new scrollpreviou");
         });
     }
+    public static startAutoScroll(Gallery: HTMLElement | null, card: HTMLElement | null, wrapper: HTMLElement | null) {
+        console.log("started");
+        this.scrollInterval = setInterval(() => {
+            if (this.isScrollingForward) {
+                if (Gallery.scrollLeft + Gallery.clientWidth >= wrapper.scrollWidth) {
+                    console.log("Reached the end, resetting scrollLeft.");
+                    this.isScrollingForward = false;
+                }
+                Gallery.scrollLeft += card.offsetWidth;
+            } else {
+                if (Gallery.scrollLeft <= 0) {
+                    console.log("Reached the start, reversing scroll direction.");
+                    this.isScrollingForward = true;
+                }
+                Gallery.scrollLeft -= card.offsetWidth;
+            }
+        }, this.scrollDelay);
+    }
+
 }
+window.addEventListener('scroll', () => {
+    const currentPosition = window.scrollY;
+    if (RecentSearchvars.recentGallery && RecentSearchvars.recentCard && RecentSearchvars.recentWrapper) {
+        if (!HorizontalScroll.isTargetReached && currentPosition >= RecentSearchvars.recentGallery.offsetTop - 500) {
+            HorizontalScroll.isTargetReached = true;
+            console.log("I have reached the intended part");
+            HorizontalScroll.startAutoScroll(RecentSearchvars.recentGallery, RecentSearchvars.recentCard, RecentSearchvars.recentWrapper);
+        }
+    }
+    if (SubscribeVars.weatherUpdateGallery && SubscribeVars.updateCard && SubscribeVars.weatherUpdateWrapper) {
+        if (!HorizontalScroll.isTargetReached2 && currentPosition >= SubscribeVars.weatherUpdateGallery.offsetTop - 500) {
+            HorizontalScroll.isTargetReached2 = true;
+            console.log("I have reached the intended part");
+            HorizontalScroll.startAutoScroll(SubscribeVars.weatherUpdateGallery, SubscribeVars.updateCard, SubscribeVars.weatherUpdateWrapper);
+        }
+    }
+
+});
+// Today
+HorizontalScroll.scrollNext(weeklyVars.nextBtn, weeklyVars.gallary, 350, 20);
+HorizontalScroll.scrollpreviou(weeklyVars.previouBtn, weeklyVars.gallary, 350, 20);
+// weekly
+HorizontalScroll.scrollNext(weeklyVars.nextBtn, weeklyVars.gallaryWeekly, 350, 20);
+HorizontalScroll.scrollpreviou(weeklyVars.previouBtn, weeklyVars.gallaryWeekly, 350, 20);
+// hotel
+HorizontalScroll.scrollNext(hotelVars.hotelNextBtn, hotelVars.hotelGallery, hotelVars.hotelCard, 7);
+HorizontalScroll.scrollpreviou(hotelVars.hotelPreBtn, hotelVars.hotelGallery, hotelVars.hotelCard, 7);
+// restaurants
+HorizontalScroll.scrollNext(RestaurantsVars.restaurantsNextBtn, RestaurantsVars.restaurantGallery, RestaurantsVars.restaurantCard, 7);
+HorizontalScroll.scrollpreviou(RestaurantsVars.restaurantsPrevBtn, RestaurantsVars.restaurantGallery, RestaurantsVars.restaurantCard, 7);
