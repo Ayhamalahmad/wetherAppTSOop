@@ -135,7 +135,6 @@ const weeklyVars: weeklyVarsTypes = {
     navigationBtns: document.querySelectorAll(".navigation-buttons button"),
     weeklyWrapper: document.querySelector(".weekly-wrapper"),
     todayWrapper: document.querySelector(".today-wrapper"),
-
 }
 
 // Api Url
@@ -265,8 +264,8 @@ const DateUtils: DateUtilsTypes = {
 }
 // classes
 class dateHndler {
-    private hours: number | undefined | any;;
-    private minutes: number | undefined | any;;
+    private hours: number | undefined | any;
+    private minutes: number | undefined | any;
     private dateUtils: DateUtilsTypes;
     constructor(dateUtils: DateUtilsTypes) {
         this.dateUtils = dateUtils;
@@ -284,77 +283,20 @@ class dateHndler {
         }
     }
 }
-class weatherData {
-    private reset: reset;
-    private UIUpdater: UIUpdater;
-    private dateHndler: dateHndler;
-    private textHandler: textHandler;
-    constructor() {
-        locationSettings.APIKey = "473a86fc6ac47386e6d6c5132cc575a8";
-        locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=London&units=metric&appid=${locationSettings.APIKey}`;
-        this.reset = new reset();
-        this.UIUpdater = new UIUpdater();
-        this.dateHndler = new dateHndler(DateUtils);
-        this.textHandler = new textHandler();
-    }
-    public async fetchWeather(): Promise<void> {
-        try {
-            console.log("from : fetchWeather");
-            let response: Response = await fetch(locationSettings.apiUrl);
-            locationSettings.data = await response.json();
-            this.reset.resetNewsWeatherInfoAndTodayWrapper();
-            this.reset.resetWeeklyWrapper();
-            this.UIUpdater.createHourlyNews();
-            // this.UIUpdater.createHourlyNews();
-            this.dateHndler.handleData();
-            this.textHandler.cityNameHandler();
-            this.textHandler.cardleft();
-            this.textHandler.newsCard();
-            this.textHandler.cardRight();
-            this.textHandler.hourly();
-            this.textHandler.fiveDaysforecastM();
-            this.textHandler.sunriseAndSunset();
-            this.UIUpdater.updateHourlyWeatherData();
-            // this.getWeatherWeekly();
-        } catch (error) {
 
-        }
-    }
-    public async searchCity(city: string) {
-        locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${locationSettings.APIKey}`;
-        await this.fetchWeather();
-        console.log("from searchCity");
-        // Reset latitude1 and longitude2
-        // locationSettings.latitude1 = 0;
-        // locationSettings.longitude2 = 0;
-        this.reset.resetCoordinates();
-    }
-    public async getWeatherWeekly(city?: any) {
-        if ((locationSettings.latitude1, locationSettings.longitude2)) {
-            locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${locationSettings.latitude1}&lon=${locationSettings.longitude2}&appid=${locationSettings.APIKey}`;
-        } else {
-            if (city) {
-                locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${locationSettings.APIKey}`;
-            } else {
-                locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=London&appid=${locationSettings.APIKey}`;
-            }
-        }
-        console.log("getWeatherWeekly", locationSettings.apiUrl);
-        await this.fetchWeather();
-    }
-}
+
 class textHandler {
-    public updateElementText(elements: any, text: any): void {
-        if (Array.isArray(elements)) {
-            elements.forEach((element: any) => {
-                if (element.textContent) element.textContent = text;
-            });
-        }
+    public static updateElementText(elements: any, text: any): void {
+
+        elements.forEach((element: any) => {
+            element.textContent = text;
+
+        });
     }
     // 
-    public cityNameHandler() {
+    public static cityNameHandler() {
         if (locationSettings.data && locationSettings.data.cod === "404") {
-            console.log("from : cityNameHandler");
+
             homeVars.filedMeessage?.classList.add("active");
         } else {
             if (locationSettings.data.name && homeVars.cityName) {
@@ -364,8 +306,8 @@ class textHandler {
         }
     }
     // sunrise and sunset
-    public sunriseAndSunset() {
-        console.log("sunriseAndSunset");
+    public static sunriseAndSunset() {
+
         if (cardNewVariables.timeSunset && cardNewVariables.timeSunrise && homeVars.country && locationSettings.data.main && locationSettings.data.wind && locationSettings.data.weather && locationSettings.data.clouds && locationSettings.data.sys) {
             homeVars.country.textContent = locationSettings.data.sys.country;
             const sunsetTime = new Date(locationSettings.data.sys.sunset * 1000);
@@ -387,22 +329,23 @@ class textHandler {
         }
     }
     // card left
-    public cardleft() {
+    public static cardleft() {
+
         const rainData = locationSettings.data.rain;
-        console.log("rainData", rainData);
         if (rainData && rainData["1h"]) {
             const rainAmount = rainData["1h"];
             this.updateElementText(locationSettings.data.rain, `rain ${rainAmount}h`);
         } else {
             this.updateElementText(locationSettings.data.rain, `rain ${0}h`);
         }
+        console.log("locationSettings.data.humidity", locationSettings.data.humidity);
         this.updateElementText(locationSettings.data.humidity, `${locationSettings.data.main?.humidity}%`);
         this.updateElementText(locationSettings.data.clouds, `clouds ${locationSettings.data?.clouds?.all}%`);
         this.updateElementText(locationSettings.data.wind, `Wind ${locationSettings.data?.wind?.speed}km/h`);
     }
 
     // card right
-    public cardRight() {
+    public static cardRight() {
         if (locationSettings.data && locationSettings.data.weather && locationSettings.data.weather.length > 0) {
             locationSettings.iconURL =
                 "http://openweathermap.org/img/wn/" +
@@ -421,16 +364,16 @@ class textHandler {
         this.updateElementText(homeVars.tempMax, `- ${Math.trunc(locationSettings.data.main?.temp_max)}°`);
     }
     // news card
-    public newsCard() {
+    public static newsCard() {
         if (cardNewVariables.currentTemperature && cardNewVariables.highTemperature) {
             cardNewVariables.currentTemperature.textContent = `${Math.trunc(locationSettings.data?.main?.temp_min)}°`;
             cardNewVariables.highTemperature.textContent = `${Math.floor(locationSettings.data?.main?.temp_max)}°`;
         }
     }
     // five Days forecast
-    public fiveDaysforecastM() {
+    public static fiveDaysforecastM() {
         if (locationSettings.data.list) {
-            console.log("from ,fiveDaysforecastM");
+
             locationSettings.createWeatherWeekly = (element: any) => {
                 const dateString = element.dt_txt.split(" ")[0];
                 const dateParts = dateString.split("-");
@@ -468,26 +411,79 @@ class textHandler {
         }
     }
     // hourly
-    public hourly() {
+    public static hourly() {
         if (locationSettings.data) {
             locationSettings.data.list?.forEach((e: any) => {
                 const dateTimeParts = e.dt_txt.split(" ");
                 const dateParts = dateTimeParts[0].split("-");
                 const day = parseInt(dateParts[2]);
-                console.log(day);
-                console.log(dateParts);
-                console.log(dateTimeParts);
+
+
+
                 if (day === DateUtils.currentDay) {
                     locationSettings.hourlyDataForCurrentDay.push(e);
                 }
             });
+            reset.resetNewsWeatherInfoAndTodayWrapper();
+            reset.resetWeeklyWrapper();
         }
     }
 
 }
+class weatherData {
+    private UIUpdater: UIUpdater;
+    constructor() {
+        locationSettings.APIKey = "473a86fc6ac47386e6d6c5132cc575a8";
+        locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=London&units=metric&appid=${locationSettings.APIKey}`;
+        this.UIUpdater = new UIUpdater();
+
+    }
+    public static async fetchWeather(): Promise<void> {
+        try {
+
+            let response: Response = await fetch(locationSettings.apiUrl);
+            locationSettings.data = await response.json();
+            reset.resetNewsWeatherInfoAndTodayWrapper();
+            reset.resetWeeklyWrapper();
+            dateHndlerInstance.handleData();
+            textHandler.cityNameHandler();
+            textHandler.cardleft();
+            textHandler.newsCard();
+            textHandler.cardRight();
+            textHandler.hourly();
+            textHandler.fiveDaysforecastM();
+            textHandler.sunriseAndSunset();
+            UIUpdater.updateHourlyWeatherData();
+        } catch (error) {
+
+        }
+    }
+    public static async searchCity(city: string) {
+        locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${locationSettings.APIKey}`;
+        await weatherData.fetchWeather();
+
+        // Reset latitude1 and longitude2
+        // locationSettings.latitude1 = 0;
+        // locationSettings.longitude2 = 0;
+        reset.resetCoordinates();
+    }
+    public static async getWeatherWeekly(city?: any) {
+        if ((locationSettings.latitude1, locationSettings.longitude2)) {
+            locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${locationSettings.latitude1}&lon=${locationSettings.longitude2}&appid=${locationSettings.APIKey}`;
+        } else {
+            if (city) {
+                locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${locationSettings.APIKey}`;
+            } else {
+                locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=London&appid=${locationSettings.APIKey}`;
+            }
+        }
+
+        await weatherData.fetchWeather();
+    }
+}
 class reset {
     // reset NewsWeatherInfo
-    resetNewsWeatherInfoAndTodayWrapper() {
+    static resetNewsWeatherInfoAndTodayWrapper() {
         if (cardNewVariables.NewsWeatherInfo && weeklyVars.todayWrapper) {
             cardNewVariables.NewsWeatherInfo.textContent = "";
             // reset todayWrapper
@@ -497,7 +493,7 @@ class reset {
     }
 
     // reset weeklyWrapper
-    public resetWeeklyWrapper() {
+    public static resetWeeklyWrapper() {
         if (weeklyVars.weeklyWrapper) { weeklyVars.weeklyWrapper.textContent = ""; }
         locationSettings.fiveDaysforecast?.forEach((element: any) => {
             weeklyVars.weeklyWrapper?.insertAdjacentHTML(
@@ -508,13 +504,15 @@ class reset {
         });
     }
 
-    public resetCoordinates(): void {
+    public static resetCoordinates(): void {
         locationSettings.latitude1 = 0;
         locationSettings.longitude2 = 0;
     }
 }
 class UIUpdater {
-    updateHourlyWeatherData() {
+    public static updateHourlyWeatherData() {
+        reset.resetNewsWeatherInfoAndTodayWrapper();
+        reset.resetWeeklyWrapper();
         locationSettings.hourlyDataForCurrentDay?.forEach((e: any) => {
             locationSettings.dateTimeParts = e.dt_txt.split(" ")[1].split(":")[0];
             locationSettings.daylyRainData = e.rain;
@@ -534,13 +532,14 @@ class UIUpdater {
             locationSettings.description = e.weather[0].description;
             locationSettings.speed = e.wind.speed;
             this.createHourly(e);
+
             weeklyVars.todayWrapper?.insertAdjacentHTML("beforeend", this.createHourly(e));
-            this.createHourlyNews();
-            cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", uIUpdaterInstance.createHourlyNews());
+            // this.createHourlyNews();
+            cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", UIUpdater.createHourlyNews());
         });
     }
     // Funtion to create card
-    createHourly(e: any) {
+    public static createHourly = (e: any) => {
         return `
         <div class="weather-box">
         <img src="http://openweathermap.org/img/wn/${e.weather[0].icon
@@ -578,8 +577,8 @@ class UIUpdater {
 
     // hourly for news
     // Funtion to create card
-    createHourlyNews() {
-        console.log("from createHourlyNews");
+    public static createHourlyNews = () => {
+
         return `
               <div class="weather-details">
               <i class="fas fa-cloud weather-icon"></i>
@@ -600,6 +599,9 @@ class userLocation {
         this.weatherData = new weatherData();
     }
     public getUserLocation(successCallback: Function, positionErrorCallback: Function): any {
+        // reset.resetNewsWeatherInfoAndTodayWrapper();
+        // reset.resetWeeklyWrapper();
+
         locationSettings.successCallback = successCallback;
         locationSettings.positionErrorCallback = positionErrorCallback;
         navigator.geolocation.getCurrentPosition(
@@ -613,54 +615,49 @@ class userLocation {
         locationSettings.latitude1 = latitude;
         locationSettings.longitude2 = longitude;
         locationSettings.apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${locationSettings.APIKey}`;
-        await this.weatherData.fetchWeather();
-        await this.weatherData.getWeatherWeekly();
+        await weatherData.fetchWeather();
+        await weatherData.getWeatherWeekly();
     }
     public positionErrorCallback(error: any) {
-        console.log(error);
+
     }
 }
 locationSettings.temperatureUnit.textContent = "℃";
 // Instances 
 let weatherInstance = new weatherData();
-let textHandlerInstance = new textHandler();
+// let textHandlerInstance = new textHandler();
 let userLocationInstance = new userLocation();
 let uIUpdaterInstance = new UIUpdater();
 let resetInstance = new reset();
 let dateHndlerInstance = new dateHndler(DateUtils);
 // Event listeners
-homeVars.locationBtn?.addEventListener("click", (e) => {
+homeVars.locationBtn?.addEventListener("click", () => {
     userLocationInstance.getUserLocation(locationSettings.successCallback, locationSettings.positionErrorCallback);
 });
 homeVars.searchBTN?.addEventListener("click", () => {
     if (homeVars.locationInput?.value.trim() !== "" && homeVars.locationInput) {
         // weatherInstance
-        weatherInstance.searchCity(homeVars.locationInput.value.trim());
-        weatherInstance.getWeatherWeekly(homeVars.locationInput.value.trim());
-        // uIUpdaterInstance.updateHourlyWeatherData();
-        resetInstance.resetWeeklyWrapper();
+        weatherData.searchCity(homeVars.locationInput.value.trim());
+        weatherData.getWeatherWeekly(homeVars.locationInput.value.trim());
+        reset.resetWeeklyWrapper();
         homeVars.locationInput.value = "";
     }
 });
 homeVars.locationInput?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
         if (homeVars.locationInput?.value.trim() !== "" && homeVars.locationInput) {
-            weatherInstance.searchCity(homeVars.locationInput.value.trim());
-            weatherInstance.getWeatherWeekly(homeVars.locationInput.value.trim());
+            weatherData.searchCity(homeVars.locationInput.value.trim());
+            weatherData.getWeatherWeekly(homeVars.locationInput.value.trim());
             homeVars.locationInput.value = "";
-            resetInstance.resetWeeklyWrapper();
+            reset.resetWeeklyWrapper();
         }
     }
 });
-weatherInstance.fetchWeather().then(() => {
+weatherData.fetchWeather().then(() => {
     if (locationSettings.data) {
-        console.log(locationSettings.data);
+
         // resetInstance
-        resetInstance.resetWeeklyWrapper();
-        // Insert Data
-        cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", uIUpdaterInstance.createHourlyNews());
-        // Insert Data
-        cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", uIUpdaterInstance.createHourlyNews());
+        reset.resetWeeklyWrapper();
     }
 });
 
@@ -668,9 +665,9 @@ weatherInstance.fetchWeather().then(() => {
 
 window.addEventListener("load", async () => {
     userLocationInstance.getUserLocation(locationSettings.successCallback, locationSettings.positionErrorCallback);
-    await weatherInstance.fetchWeather();
-    await weatherInstance.getWeatherWeekly();
-    resetInstance.resetWeeklyWrapper();
+    await weatherData.fetchWeather();
+    await weatherData.getWeatherWeekly();
+    reset.resetWeeklyWrapper();
     // Insert Data
     // cardNewVariables.NewsWeatherInfo?.insertAdjacentHTML("beforeend", uIUpdaterInstance.createHourlyNews());
 });
@@ -680,38 +677,38 @@ class HorizontalScroll {
     static scrollDelay: number = 6000;
     static isTargetReached: boolean = false;
     static isTargetReached2: boolean = false;
-    public static scrollNext(neBtn: HTMLElement | null, Gallery: HTMLElement | null, ElementTo: HTMLElement | null | number, gap: number = 0) {
-        neBtn.addEventListener("click", (e) => {
+    public static scrollNext(neBtn: HTMLElement | null, Gallery: HTMLElement | null | any, ElementTo: any, gap: number = 0) {
+        neBtn?.addEventListener("click", (e) => {
             if (typeof ElementTo === "number") {
                 Gallery.scrollLeft += ElementTo + gap;
             } else {
                 Gallery.scrollLeft += ElementTo.offsetWidth + gap;
             }
-            console.log("from new fun");
+
         });
     }
-    public static scrollpreviou(peBtn: HTMLElement | null, Gallery: HTMLElement | null, ElementTo: HTMLElement | null | number, gap: number = 0) {
-        peBtn.addEventListener("click", (e) => {
+    public static scrollpreviou(peBtn: HTMLElement | null, Gallery: HTMLElement | null | any, ElementTo: any, gap: number = 0) {
+        peBtn?.addEventListener("click", (e) => {
             if (typeof ElementTo === "number") {
                 Gallery.scrollLeft -= ElementTo + gap;
             } else {
                 Gallery.scrollLeft -= ElementTo.offsetWidth + gap;
             }
-            console.log("from new scrollpreviou");
+
         });
     }
-    public static startAutoScroll(Gallery: HTMLElement | null, card: HTMLElement | null, wrapper: HTMLElement | null) {
-        console.log("started");
+    public static startAutoScroll(Gallery: HTMLElement | null | any, card: HTMLElement | null | any, wrapper: HTMLElement | null | any) {
+
         this.scrollInterval = setInterval(() => {
             if (this.isScrollingForward) {
                 if (Gallery.scrollLeft + Gallery.clientWidth >= wrapper.scrollWidth) {
-                    console.log("Reached the end, resetting scrollLeft.");
+
                     this.isScrollingForward = false;
                 }
                 Gallery.scrollLeft += card.offsetWidth;
             } else {
                 if (Gallery.scrollLeft <= 0) {
-                    console.log("Reached the start, reversing scroll direction.");
+
                     this.isScrollingForward = true;
                 }
                 Gallery.scrollLeft -= card.offsetWidth;
@@ -725,14 +722,14 @@ window.addEventListener('scroll', () => {
     if (RecentSearchvars.recentGallery && RecentSearchvars.recentCard && RecentSearchvars.recentWrapper) {
         if (!HorizontalScroll.isTargetReached && currentPosition >= RecentSearchvars.recentGallery.offsetTop - 500) {
             HorizontalScroll.isTargetReached = true;
-            console.log("I have reached the intended part");
+
             HorizontalScroll.startAutoScroll(RecentSearchvars.recentGallery, RecentSearchvars.recentCard, RecentSearchvars.recentWrapper);
         }
     }
     if (SubscribeVars.weatherUpdateGallery && SubscribeVars.updateCard && SubscribeVars.weatherUpdateWrapper) {
         if (!HorizontalScroll.isTargetReached2 && currentPosition >= SubscribeVars.weatherUpdateGallery.offsetTop - 500) {
             HorizontalScroll.isTargetReached2 = true;
-            console.log("I have reached the intended part");
+
             HorizontalScroll.startAutoScroll(SubscribeVars.weatherUpdateGallery, SubscribeVars.updateCard, SubscribeVars.weatherUpdateWrapper);
         }
     }
@@ -750,3 +747,44 @@ HorizontalScroll.scrollpreviou(hotelVars.hotelPreBtn, hotelVars.hotelGallery, ho
 // restaurants
 HorizontalScroll.scrollNext(RestaurantsVars.restaurantsNextBtn, RestaurantsVars.restaurantGallery, RestaurantsVars.restaurantCard, 7);
 HorizontalScroll.scrollpreviou(RestaurantsVars.restaurantsPrevBtn, RestaurantsVars.restaurantGallery, RestaurantsVars.restaurantCard, 7);
+
+headerVars.menuBtn?.addEventListener("click", () => {
+    headerVars.headerContainer?.classList.toggle("active");
+    headerVars.headerNav?.classList.toggle("active");
+    headerVars.headerLinks?.classList.toggle("active");
+});
+//
+weeklyVars.groupAllBtn?.forEach((btn: any) => {
+    btn.addEventListener("click", (e: any) => {
+        weeklyVars.gallaryWeekly?.classList.remove("active");
+        weeklyVars.gallary?.classList.remove("active");
+
+        if (e.target?.classList.contains("today-button")) {
+            weeklyVars.gallary?.classList.add("active");
+        } else {
+            weeklyVars.gallaryWeekly?.classList.add("active");
+        }
+        weeklyVars.groupAllBtn?.forEach((b: any) => {
+            b.classList.remove("active");
+        });
+        if (!e.target.classList.contains("active")) {
+            e.target.classList.add("active");
+        }
+    });
+});
+
+
+// let body = document.querySelector("body");
+// let theme = document.querySelector(".theme");
+// let themeSvgs = document.querySelectorAll(".theme .icon");
+// let iconMoon = document.querySelector(".icon-moon");
+// let iconSun = document.querySelector(".icon-sun");
+// let currentTheme = document.querySelector(".current-theme");
+// theme.addEventListener("click", () => {
+//   body.classList.toggle("dark");
+//   if (body.classList.contains("dark")) {
+//     currentTheme.textContent = "Light";
+// } else {
+//     currentTheme.textContent = "Dark";
+//   }
+// });
